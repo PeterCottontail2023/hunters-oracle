@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="panel">
+  <h2>Plan your sit</h2>
+
+  {% if error %}
+  <div class="error-box">{{ error }}</div>
+  {% endif %}
+
+  <form method="post" action="{{ url_for('predict') }}">
+    <label for="zip_code">Zip code</label>
+    <input type="text" id="zip_code" name="zip_code" inputmode="numeric" pattern="[0-9]{5}"
+           maxlength="5" placeholder="e.g. 55401" required
+           value="{{ form.get('zip_code', '') }}">
+
+    <label for="hunt_date">Hunt date <span class="hint">(today through {{ max_date }})</span></label>
+    <input type="date" id="hunt_date" name="hunt_date" min="{{ today }}" max="{{ max_date }}" required
+           value="{{ form.get('hunt_date', today) }}">
+
+    <fieldset>
+      <legend>Have you been in the woods in the last 72 hours?</legend>
+      <div class="radio-row">
+        <label><input type="radio" name="saw_signs" value="yes"
+               {% if form.get('saw_signs') == 'yes' %}checked{% endif %} onclick="showSigns(true)"> Yes</label>
+        <label><input type="radio" name="saw_signs" value="no"
+               {% if form.get('saw_signs', 'no') == 'no' %}checked{% endif %} onclick="showSigns(false)"> No / haven't checked</label>
+      </div>
+
+      <div id="signs_detail" {% if form.get('saw_signs') != 'yes' %}hidden{% endif %}>
+        <label style="font-weight:600;margin-top:10px;">Which rut signs have you observed?</label>
+        <div class="signs-grid">
+          {% for key, text in sign_options.items() %}
+          <label>
+            <input type="checkbox" name="signs" value="{{ key }}"
+                   {% if key in form.get('signs', []) %}checked{% endif %}>
+            {{ text }}
+          </label>
+          {% endfor %}
+        </div>
+      </div>
+    </fieldset>
+
+    <button type="submit" class="cta">Consult the Oracle</button>
+  </form>
+</div>
+<script>
+  function showSigns(show) {
+    document.getElementById('signs_detail').hidden = !show;
+  }
+</script>
+{% endblock %}

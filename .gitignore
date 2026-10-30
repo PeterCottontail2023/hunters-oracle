@@ -1,0 +1,18 @@
+# Virtual environment (created automatically by run.sh / run.bat)
+.venv/
+
+# Python bytecode
+__pycache__/
+*.pyc
+
+# Your personal stand data -- this is local state specific to your land,
+# not something that belongs in version control (or a public repo)
+data/stands.json
+
+# OS cruft
+.DS_Store
+Thumbs.db
+
+# Local Claude Code / MCP session config -- not part of the project
+.claude/
+.mcp.json

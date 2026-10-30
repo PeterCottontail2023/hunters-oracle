@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% block title %}Hunter's Oracle — My Stands{% endblock %}
+{% block content %}
+<div class="panel">
+  <h2>My stands</h2>
+  <p class="blurb small">
+    Tag each stand with the wind directions (where the wind is blowing <strong>from</strong>,
+    same as a forecast) that keep your scent moving away from where you expect deer to
+    approach. You know your land &mdash; the Oracle just matches the forecast against it.
+  </p>
+
+  {% if error %}
+  <div class="error-box">{{ error }}</div>
+  {% endif %}
+
+  {% if stands %}
+  <div class="stand-list">
+    {% for s in stands %}
+    <div class="stand-card">
+      <div class="stand-card-head">
+        <span class="stand-name">{{ s.name }}</span>
+        <form method="post" action="{{ url_for('delete_stand', stand_id=s.id) }}" style="margin:0;">
+          <button type="submit" class="mini-delete" title="Delete this stand">&times;</button>
+        </form>
+      </div>
+      <div class="stand-dirs">
+        {% for d in s.good_from_directions %}<span class="dir-pill">{{ d }}</span>{% endfor %}
+      </div>
+      {% if s.notes %}<div class="stand-notes">{{ s.notes }}</div>{% endif %}
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <p class="blurb small">No stands added yet &mdash; add one below and the result page will start
+    recommending which one fits the forecasted wind.</p>
+  {% endif %}
+</div>
+
+<div class="panel">
+  <h2>Add a stand</h2>
+  <form method="post" action="{{ url_for('add_stand') }}">
+    <label for="name">Stand name</label>
+    <input type="text" id="name" name="name" placeholder="e.g. North Ridge" required>
+
+    <label>Good wind directions <span class="hint">(select all that keep you scent-safe here)</span></label>
+    <div class="signs-grid dirs-grid">
+      {% for d in directions %}
+      <label><input type="checkbox" name="directions" value="{{ d }}"> {{ d }}</label>
+      {% endfor %}
+    </div>
+
+    <label for="notes">Notes <span class="hint">(optional)</span></label>
+    <input type="text" id="notes" name="notes" placeholder="e.g. overlooks the creek crossing">
+
+    <button type="submit" class="cta">Add stand</button>
+  </form>
+</div>
+
+<a class="again-btn" href="{{ url_for('index') }}">&larr; Back</a>
+{% endblock %}

@@ -1,0 +1,174 @@
+{% extends "base.html" %}
+{% block title %}Hunter's Oracle — {{ r.grade }}{% endblock %}
+{% block content %}
+{% set grade_colors = {
+  'Poor': 'var(--grade-poor)',
+  'Fair': 'var(--grade-fair)',
+  'Good': 'var(--grade-good)',
+  'Great': 'var(--grade-great)',
+  'Exceptional': 'var(--grade-exceptional)'
+} %}
+{% set grade_color = grade_colors.get(r.grade, 'var(--blaze)') %}
+
+<div class="panel">
+  <div class="score-card">
+    <div class="gauge" style="--pct: {{ r.score_pct }}; --grade-color: {{ grade_color }};">
+      <div class="gauge-inner">
+        <div class="gauge-score">{{ r.score_pct }}</div>
+        <div class="gauge-max">out of 100</div>
+      </div>
+    </div>
+    <div class="score-meta">
+      <span class="grade-pill" style="background: {{ grade_color }};">{{ r.grade }}</span>
+      <div class="loc">{{ r.location.city }}, {{ r.location.state }} ({{ r.location.zip }})</div>
+      <div class="date">{{ r.target_date_str }}</div>
+    </div>
+  </div>
+
+  <p class="verdict" style="border-color: {{ grade_color }};">&ldquo;{{ r.verdict }}&rdquo;</p>
+
+  <div class="components">
+    {% for c in r.components %}
+    <div class="component">
+      <div class="label">{{ c.label }}</div>
+      <div class="bar-track"><div class="bar-fill" style="width: {{ (c.points / c.max * 100) | round(0, 'floor') }}%;"></div></div>
+      <div class="value">{{ c.points }} / {{ c.max }}</div>
+    </div>
+    {% endfor %}
+  </div>
+
+  {% if r.data_limited %}
+  <div class="note-box">NWS hourly guidance for this date was limited (it's near the edge of the ~7-day forecast window), so some weather detail above is a lower-confidence estimate.</div>
+  {% endif %}
+</div>
+
+<div class="panel">
+  <h2>Legal shooting hours</h2>
+  <div class="legal-row">
+    <div class="legal-box">
+      <div class="label">Legal shooting hours</div>
+      {% if r.sun.legal_start %}
+      <div class="when">{{ r.sun.legal_start_str }} &ndash; {{ r.sun.legal_end_str }}</div>
+      {% else %}<div class="when">n/a</div>{% endif %}
+    </div>
+    <div class="legal-box highlight">
+      <div class="label">Be on stand by</div>
+      {% if r.sun.stand_time %}
+      <div class="when">{{ r.sun.stand_time_str }}</div>
+      {% else %}<div class="when">n/a</div>{% endif %}
+    </div>
+  </div>
+  <p class="blurb small">
+    Assumes the common rule of legal light = {{ r.sun.legal_hours_offset_min }} min before sunrise to
+    {{ r.sun.legal_hours_offset_min }} min after sunset, with a {{ r.sun.stand_lead_time_min }}-minute buffer to
+    get settled before legal light. <strong>Legal hours vary by state</strong> (some use civil-twilight
+    tables instead of a flat offset) &mdash; always confirm against your state's regulations.
+  </p>
+</div>
+
+<div class="panel">
+  <h2>Best windows to be in the stand</h2>
+  <div class="windows-row">
+    <div class="window-box {% if r.windows.best == 'dawn' %}best{% endif %}">
+      {% if r.windows.best == 'dawn' %}<span class="best-flag">Best bet</span>{% endif %}
+      <div class="label">Dawn</div>
+      {% if r.windows.dawn %}
+      <div class="when">{{ r.windows.dawn[0] }} &ndash; {{ r.windows.dawn[1] }}</div>
+      {% else %}<div class="when">n/a</div>{% endif %}
+    </div>
+    <div class="window-box {% if r.windows.best == 'dusk' %}best{% endif %}">
+      {% if r.windows.best == 'dusk' %}<span class="best-flag">Best bet</span>{% endif %}
+      <div class="label">Dusk</div>
+      {% if r.windows.dusk %}
+      <div class="when">{{ r.windows.dusk[0] }} &ndash; {{ r.windows.dusk[1] }}</div>
+      {% else %}<div class="when">n/a</div>{% endif %}
+    </div>
+  </div>
+  <dl class="detail-grid">
+    <dt>Sunrise / Sunset</dt><dd>{{ r.sun.sunrise_str }} / {{ r.sun.sunset_str }}</dd>
+    <dt>Day length</dt><dd>{{ r.sun.day_length_hrs if r.sun.day_length_hrs is not none else 'n/a' }} hrs</dd>
+  </dl>
+</div>
+
+<div class="panel">
+  <h2>Weather</h2>
+  <p class="blurb">{{ r.weather.trend_note }} Daytime sky trending toward <strong>{{ r.weather.sky_summary }}</strong>.</p>
+  <dl class="detail-grid">
+    <dt>Avg wind (dawn/dusk)</dt><dd>{{ r.weather.avg_wind_mph | round(1) if r.weather.avg_wind_mph is not none else 'n/a' }} mph</dd>
+    <dt>Peak daytime high</dt><dd>{{ r.weather.peak_high_f if r.weather.peak_high_f is not none else 'n/a' }}&deg;F</dd>
+    <dt>Daytime low</dt><dd>{{ r.weather.daytime_low_f if r.weather.daytime_low_f is not none else 'n/a' }}&deg;F</dd>
+    <dt>Minimum wind chill</dt><dd>{{ r.weather.min_wind_chill_f | round(0, 'floor') | int if r.weather.min_wind_chill_f is not none else 'n/a' }}&deg;F</dd>
+  </dl>
+</div>
+
+<div class="panel">
+  <h2>12-hour outlook from your stand time</h2>
+  {% if r.chart.has_data %}
+  <p class="blurb small">{{ r.chart.start_str }} &ndash; {{ r.chart.end_str }}{% if r.chart.incomplete %} (forecast data runs out before the full 12 hours &mdash; this window is near the edge of the ~7-day NWS outlook){% endif %}</p>
+  <div class="chart-wrap">{{ r.chart.svg | safe }}</div>
+  <div class="chart-legend">
+    <span><i class="swatch" style="background:#ff6a00;"></i> Temperature</span>
+    <span><i class="swatch dashed" style="border-color:#ffb400;"></i> Wind chill</span>
+    <span><i class="swatch bar" style="background:#5b85ab;"></i> Precip. chance</span>
+    <span>&#8599; Arrows show where the wind is blowing <em>toward</em> (where your scent goes)</span>
+  </div>
+  {% else %}
+  <p class="blurb small">No hourly forecast data available for this window.</p>
+  {% endif %}
+</div>
+
+<div class="panel">
+  <h2>Wind &amp; stand advisor</h2>
+  <div class="windows-row">
+    <div class="window-box">
+      <div class="label">Dawn wind</div>
+      {% if r.wind.dawn_dir %}
+      <div class="when">{{ r.wind.dawn_dir }} <span class="flow-arrow">{{ r.wind.dawn_flow_arrow }}</span></div>
+      {% else %}<div class="when">n/a</div>{% endif %}
+    </div>
+    <div class="window-box">
+      <div class="label">Dusk wind</div>
+      {% if r.wind.dusk_dir %}
+      <div class="when">{{ r.wind.dusk_dir }} <span class="flow-arrow">{{ r.wind.dusk_flow_arrow }}</span></div>
+      {% else %}<div class="when">n/a</div>{% endif %}
+    </div>
+  </div>
+
+  {% if has_stands %}
+  <dl class="detail-grid" style="margin-top:14px;">
+    <dt>Best stand(s) for dawn</dt>
+    <dd>{% if stand_recs.dawn %}{{ stand_recs.dawn | map(attribute='name') | join(', ') }}{% else %}none of your stands fit this wind{% endif %}</dd>
+    <dt>Best stand(s) for dusk</dt>
+    <dd>{% if stand_recs.dusk %}{{ stand_recs.dusk | map(attribute='name') | join(', ') }}{% else %}none of your stands fit this wind{% endif %}</dd>
+  </dl>
+  <p class="blurb small"><a href="{{ url_for('manage_stands') }}">Manage my stands &rarr;</a></p>
+  {% else %}
+  <p class="blurb small">
+    General rule of thumb: sit so the wind blows <strong>from</strong> the direction you expect
+    deer to approach, across you, and away behind you &mdash; never from your back toward their
+    travel route. <a href="{{ url_for('manage_stands') }}">Add your stands</a> and tag each with
+    the wind directions it works for, and this panel will start recommending one for you.
+  </p>
+  {% endif %}
+</div>
+
+<div class="panel">
+  <h2>Rut activity &mdash; {{ r.rut.phase }}</h2>
+  <p class="blurb">{{ r.rut.blurb }}</p>
+  {% if r.rut.sign_notes %}
+    {% for note in r.rut.sign_notes %}
+    <div class="sign-note">&#9830; {{ note }} &mdash; bumped the rut score up.</div>
+    {% endfor %}
+  {% endif %}
+  {% if r.rut.confidence == 'low' %}
+  <div class="note-box">Rut timing gets much more variable (and sometimes double-peaked) this far south &mdash; treat this phase as a rough guide, and trust your own field sign over the calendar.</div>
+  {% endif %}
+</div>
+
+<div class="panel">
+  <h2>Moon &mdash; {{ r.moon.name }}</h2>
+  <p class="blurb">{{ r.moon.illumination_pct }}% illuminated. Closer to new moon tends to push more daytime deer movement; closer to full moon, deer lean more nocturnal.</p>
+</div>
+
+<a class="again-btn" href="{{ url_for('index') }}">&larr; Run another prediction</a>
+{% endblock %}

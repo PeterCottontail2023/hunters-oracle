@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Hunter's Oracle{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <link rel="icon" href="{{ url_for('static', filename='img/buck.svg') }}">
+</head>
+<body>
+  <div class="wrap">
+    <header class="hero">
+      <div class="hero-photo">
+        <img src="{{ url_for('static', filename='img/buck-photo.jpg') }}" alt="White-tailed deer buck in tall autumn grass">
+        <div class="hero-scrim">
+          <h1>HUNTER'S ORACLE</h1>
+          <p class="tagline">Weather &middot; moon &middot; rut signs &middot; photoperiod &mdash; read into one verdict.</p>
+        </div>
+      </div>
+      <nav class="topnav"><a href="{{ url_for('manage_stands') }}">My stands</a></nav>
+    </header>
+    {% block content %}{% endblock %}
+    <p class="disclaimer">
+      Educational estimate only, blending National Weather Service forecasts with lunar and
+      rut-timing folklore. Deer don't read the forecast either &mdash; use this to plan a sit,
+      not to guarantee one.
+    </p>
+    <p class="credit">Built by <a href="https://github.com/{{ github_handle }}" target="_blank" rel="noopener">@{{ github_handle }}</a></p>
+  </div>
+</body>
+</html>
