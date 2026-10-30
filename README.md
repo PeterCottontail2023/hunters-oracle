@@ -6,7 +6,7 @@ Service forecasts, moon phase, whitetail rut timing, and your own recent
 field observations into one 0-100 score, plus a folksy verdict on whether
 it's worth skipping work for.
 
-![Hunter's Oracle](static/img/buck-photo.jpg)
+![Hunter's Oracle result page](docs/screenshot.png)
 
 Runs identically on **Windows** and **Linux**. No API keys, no accounts, no
 cloud service — it's a small Python web server that runs on your own
